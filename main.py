@@ -198,3 +198,28 @@ def seal_current_phase(
     tx = contract.functions.sealCurrentPhase().build_transaction(
         {
             "from": account.address,
+            "gas": SEAL_GAS_LIMIT,
+            "nonce": w3.eth.get_transaction_count(account.address),
+        }
+    )
+    signed = account.sign_transaction(tx)
+    tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+    receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    if receipt["status"] != 1:
+        raise RuntimeError("sealCurrentPhase reverted")
+    return receipt
+
+
+def query_commitment(
+    contract_address: str,
+    phase: int,
+    account_address: str,
+    rpc_url: Optional[str] = None,
+) -> str:
+    w3 = get_w3(rpc_url)
+    contract = get_contract_instance(w3, contract_address)
+    return contract.functions.getCommitment(phase, Web3.to_checksum_address(account_address)).call()
+
+
+def query_current_phase(contract_address: str, rpc_url: Optional[str] = None) -> int:
+    w3 = get_w3(rpc_url)
