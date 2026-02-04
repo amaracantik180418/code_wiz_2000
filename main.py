@@ -223,3 +223,28 @@ def query_commitment(
 
 def query_current_phase(contract_address: str, rpc_url: Optional[str] = None) -> int:
     w3 = get_w3(rpc_url)
+    contract = get_contract_instance(w3, contract_address)
+    return contract.functions.currentPhaseIndex().call()
+
+
+def query_phase_registrant_count(
+    contract_address: str,
+    phase: int,
+    rpc_url: Optional[str] = None,
+) -> int:
+    w3 = get_w3(rpc_url)
+    contract = get_contract_instance(w3, contract_address)
+    return contract.functions.getPhaseRegistrantCount(phase).call()
+
+
+def estimate_deploy_gas(
+    rpc_url: Optional[str] = None,
+    treasury: Optional[str] = None,
+    phase_duration: Optional[int] = None,
+    registration_fee: Optional[int] = None,
+    from_address: Optional[str] = None,
+) -> int:
+    w3 = get_w3(rpc_url)
+    artifact = load_artifact()
+    treasury_addr = treasury or TREASURY_ADDRESS
+    phase_sec = phase_duration if phase_duration is not None else PHASE_DURATION_SECONDS
