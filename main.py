@@ -148,3 +148,28 @@ def deploy(
 def get_contract_instance(w3: Web3, contract_address: str) -> Contract:
     artifact = load_artifact()
     return w3.eth.contract(
+        address=Web3.to_checksum_address(contract_address),
+        abi=artifact["abi"],
+    )
+
+
+def register_commitment(
+    contract_address: str,
+    commitment_hex: str,
+    value_wei: int,
+    rpc_url: Optional[str] = None,
+    private_key: Optional[str] = None,
+) -> TxReceipt:
+    w3 = get_w3(rpc_url)
+    pk = private_key or os.environ.get("DEPLOYER_PRIVATE_KEY")
+    if not pk:
+        raise ValueError("Set DEPLOYER_PRIVATE_KEY or pass private_key")
+
+    account = w3.eth.account.from_key(pk)
+    contract = get_contract_instance(w3, contract_address)
+    tx = contract.functions.registerCommitment(commitment_hex).build_transaction(
+        {
+            "from": account.address,
+            "value": value_wei,
+            "gas": REGISTER_GAS_LIMIT,
+            "nonce": w3.eth.get_transaction_count(account.address),
