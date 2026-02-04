@@ -73,3 +73,28 @@ def load_artifact() -> dict[str, Any]:
 
 def get_w3(rpc_url: Optional[str] = None) -> Web3:
     url = rpc_url or os.environ.get("RPC_URL", DEFAULT_RPC_URL)
+    w3 = Web3(Web3.HTTPProvider(url))
+    if not w3.is_connected():
+        raise ConnectionError(f"Cannot connect to RPC: {url}")
+    return w3
+
+
+def build_deploy_tx(
+    w3: Web3,
+    artifact: dict[str, Any],
+    treasury: str,
+    phase_duration: int,
+    registration_fee: int,
+    deployer_address: str,
+) -> dict[str, Any]:
+    contract = w3.eth.contract(
+        abi=artifact["abi"],
+        bytecode=artifact["bytecode"],
+    )
+    return contract.constructor(
+        Web3.to_checksum_address(treasury),
+        phase_duration,
+        registration_fee,
+    ).build_transaction(
+        {
+            "from": deployer_address,
