@@ -48,3 +48,28 @@ SEAL_GAS_LIMIT = 150_000
 def get_artifact_path() -> Path:
     return ARTIFACT_PATH
 
+
+def compile_contract() -> bool:
+    """Compile Code_wiz_2000.sol via Hardhat."""
+    if get_artifact_path().exists():
+        return True
+    print("Compiling contracts (npx hardhat compile)...")
+    result = subprocess.run(
+        ["npx", "hardhat", "compile"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print(result.stderr or result.stdout)
+        return False
+    return get_artifact_path().exists()
+
+
+def load_artifact() -> dict[str, Any]:
+    with open(get_artifact_path(), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def get_w3(rpc_url: Optional[str] = None) -> Web3:
+    url = rpc_url or os.environ.get("RPC_URL", DEFAULT_RPC_URL)
