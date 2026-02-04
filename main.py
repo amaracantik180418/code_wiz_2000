@@ -123,3 +123,28 @@ def deploy(
     account = w3.eth.account.from_key(pk)
     treasury_addr = treasury or TREASURY_ADDRESS
     phase_sec = phase_duration if phase_duration is not None else PHASE_DURATION_SECONDS
+    fee = registration_fee if registration_fee is not None else REGISTRATION_FEE_WEI
+
+    if not compile_contract():
+        raise RuntimeError("Compilation failed")
+
+    artifact = load_artifact()
+    tx_body = build_deploy_tx(
+        w3, artifact, treasury_addr, phase_sec, fee, account.address
+    )
+    signed = account.sign_transaction(tx_body)
+    tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+    receipt: TxReceipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+
+    if receipt["status"] != 1:
+        raise RuntimeError("Deployment transaction reverted")
+
+    address = receipt["contractAddress"]
+    assert address is not None
+    print(f"Code_wiz_2000 deployed at: {address}")
+    return address
+
+
+def get_contract_instance(w3: Web3, contract_address: str) -> Contract:
+    artifact = load_artifact()
+    return w3.eth.contract(
