@@ -98,3 +98,28 @@ def build_deploy_tx(
     ).build_transaction(
         {
             "from": deployer_address,
+            "gas": DEPLOY_GAS_LIMIT,
+            "nonce": w3.eth.get_transaction_count(deployer_address),
+        }
+    )
+
+
+def deploy(
+    rpc_url: Optional[str] = None,
+    private_key: Optional[str] = None,
+    treasury: Optional[str] = None,
+    phase_duration: Optional[int] = None,
+    registration_fee: Optional[int] = None,
+) -> str:
+    """
+    Deploy Code_wiz_2000. Uses env DEPLOYER_PRIVATE_KEY if private_key not given.
+    All other args use pre-populated constants if not provided.
+    """
+    w3 = get_w3(rpc_url)
+    pk = private_key or os.environ.get("DEPLOYER_PRIVATE_KEY")
+    if not pk:
+        raise ValueError("Set DEPLOYER_PRIVATE_KEY or pass private_key to deploy()")
+
+    account = w3.eth.account.from_key(pk)
+    treasury_addr = treasury or TREASURY_ADDRESS
+    phase_sec = phase_duration if phase_duration is not None else PHASE_DURATION_SECONDS
