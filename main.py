@@ -173,3 +173,28 @@ def register_commitment(
             "value": value_wei,
             "gas": REGISTER_GAS_LIMIT,
             "nonce": w3.eth.get_transaction_count(account.address),
+        }
+    )
+    signed = account.sign_transaction(tx)
+    tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+    receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    if receipt["status"] != 1:
+        raise RuntimeError("registerCommitment reverted")
+    return receipt
+
+
+def seal_current_phase(
+    contract_address: str,
+    rpc_url: Optional[str] = None,
+    private_key: Optional[str] = None,
+) -> TxReceipt:
+    w3 = get_w3(rpc_url)
+    pk = private_key or os.environ.get("DEPLOYER_PRIVATE_KEY")
+    if not pk:
+        raise ValueError("Set DEPLOYER_PRIVATE_KEY or pass private_key (must be controller)")
+
+    account = w3.eth.account.from_key(pk)
+    contract = get_contract_instance(w3, contract_address)
+    tx = contract.functions.sealCurrentPhase().build_transaction(
+        {
+            "from": account.address,
