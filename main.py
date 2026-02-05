@@ -348,3 +348,28 @@ def main() -> None:
 
 
 def query_phase_start_timestamp(
+    contract_address: str,
+    phase: int,
+    rpc_url: Optional[str] = None,
+) -> int:
+    w3 = get_w3(rpc_url)
+    contract = get_contract_instance(w3, contract_address)
+    return contract.functions.phaseStartTimestamp(phase).call()
+
+
+def query_immutables(
+    contract_address: str,
+    rpc_url: Optional[str] = None,
+) -> dict[str, Any]:
+    """Return treasury, phaseDurationSeconds, registrationFeeWei, refSlot, deployBlock, controller."""
+    w3 = get_w3(rpc_url)
+    contract = get_contract_instance(w3, contract_address)
+    return {
+        "treasury": contract.functions.treasury().call(),
+        "phaseDurationSeconds": contract.functions.phaseDurationSeconds().call(),
+        "registrationFeeWei": contract.functions.registrationFeeWei().call(),
+        "refSlot": contract.functions.refSlot().call().hex(),
+        "deployBlock": contract.functions.deployBlock().call(),
+        "controller": contract.functions.controller().call(),
+    }
+
