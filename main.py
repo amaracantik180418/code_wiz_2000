@@ -373,3 +373,28 @@ def query_immutables(
         "controller": contract.functions.controller().call(),
     }
 
+
+def list_phase_registrants(
+    contract_address: str,
+    phase: int,
+    rpc_url: Optional[str] = None,
+) -> list[str]:
+    w3 = get_w3(rpc_url)
+    contract = get_contract_instance(w3, contract_address)
+    n = contract.functions.getPhaseRegistrantCount(phase).call()
+    return [
+        contract.functions.getPhaseRegistrantAt(phase, i).call()
+        for i in range(n)
+    ]
+
+
+def recover_stuck_ether(
+    contract_address: str,
+    rpc_url: Optional[str] = None,
+    private_key: Optional[str] = None,
+) -> TxReceipt:
+    """Controller only: forward any stuck ETH in contract to treasury."""
+    w3 = get_w3(rpc_url)
+    pk = private_key or os.environ.get("DEPLOYER_PRIVATE_KEY")
+    if not pk:
+        raise ValueError("Set DEPLOYER_PRIVATE_KEY or pass private_key (must be controller)")
