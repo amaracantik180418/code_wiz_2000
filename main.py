@@ -298,3 +298,28 @@ def run_deploy_and_demo() -> None:
 
 
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(description="Code_wiz_2000 deploy and interact")
+    parser.add_argument("--deploy", action="store_true", help="Deploy contract")
+    parser.add_argument("--demo", action="store_true", help="Deploy and run demo (register + query)")
+    parser.add_argument("--query-phase", type=str, metavar="ADDRESS", help="Query current phase at contract ADDRESS")
+    parser.add_argument("--query-commitment", nargs=3, metavar=("ADDRESS", "PHASE", "ACCOUNT"),
+                        help="Query commitment at contract, phase, account")
+    parser.add_argument("--seal", type=str, metavar="ADDRESS", help="Seal current phase (controller only)")
+    parser.add_argument("--register", nargs=2, metavar=("ADDRESS", "COMMITMENT_HEX"),
+                        help="Register commitment at contract (pay REGISTRATION_FEE_WEI)")
+    parser.add_argument("--rpc", type=str, default=None, help="RPC URL")
+    args = parser.parse_args()
+
+    if args.demo:
+        run_deploy_and_demo()
+        return
+
+    if args.deploy:
+        addr = deploy(rpc_url=args.rpc)
+        print(addr)
+        return
+
+    if args.query_phase:
+        w3 = get_w3(args.rpc)
+        contract = get_contract_instance(w3, args.query_phase)
