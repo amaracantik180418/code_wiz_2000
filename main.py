@@ -323,3 +323,28 @@ def main() -> None:
     if args.query_phase:
         w3 = get_w3(args.rpc)
         contract = get_contract_instance(w3, args.query_phase)
+        phase = contract.functions.currentPhaseIndex().call()
+        print(f"currentPhaseIndex: {phase}")
+        return
+
+    if args.query_commitment:
+        addr, phase_str, account = args.query_commitment
+        c = query_commitment(addr, int(phase_str), account, rpc_url=args.rpc)
+        print(f"commitment: {c}")
+        return
+
+    if args.seal:
+        seal_current_phase(args.seal, rpc_url=args.rpc)
+        print("Phase sealed.")
+        return
+
+    if args.register:
+        addr, commitment_hex = args.register
+        register_commitment(addr, commitment_hex, REGISTRATION_FEE_WEI, rpc_url=args.rpc)
+        print("Commitment registered.")
+        return
+
+    parser.print_help()
+
+
+def query_phase_start_timestamp(
