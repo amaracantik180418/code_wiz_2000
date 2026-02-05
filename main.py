@@ -273,3 +273,28 @@ def run_deploy_and_demo() -> None:
 
     w3 = get_w3(rpc_url)
     print(f"Chain ID: {w3.eth.chain_id}")
+
+    addr = deploy(rpc_url=rpc_url, private_key=pk)
+    contract = get_contract_instance(w3, addr)
+    phase = contract.functions.currentPhaseIndex().call()
+    print(f"Current phase index: {phase}")
+
+    # Optionally register a commitment (costs REGISTRATION_FEE_WEI)
+    try:
+        register_commitment(
+            addr,
+            SAMPLE_COMMITMENT_HEX,
+            REGISTRATION_FEE_WEI,
+            rpc_url=rpc_url,
+            private_key=pk,
+        )
+        print("Registered sample commitment.")
+        count = query_phase_registrant_count(addr, phase, rpc_url=rpc_url)
+        print(f"Registrant count for phase {phase}: {count}")
+    except Exception as e:
+        print(f"Register step skipped or failed: {e}")
+
+    print("Done.")
+
+
+def main() -> None:
