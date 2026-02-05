@@ -248,3 +248,28 @@ def estimate_deploy_gas(
     artifact = load_artifact()
     treasury_addr = treasury or TREASURY_ADDRESS
     phase_sec = phase_duration if phase_duration is not None else PHASE_DURATION_SECONDS
+    fee = registration_fee if registration_fee is not None else REGISTRATION_FEE_WEI
+    from_addr = from_address or w3.eth.accounts[0] if w3.eth.accounts else None
+    if not from_addr:
+        return DEPLOY_GAS_LIMIT
+    contract = w3.eth.contract(abi=artifact["abi"], bytecode=artifact["bytecode"])
+    try:
+        return contract.constructor(
+            Web3.to_checksum_address(treasury_addr),
+            phase_sec,
+            fee,
+        ).estimate_gas({"from": from_addr})
+    except Exception:
+        return DEPLOY_GAS_LIMIT
+
+
+def run_deploy_and_demo() -> None:
+    """Deploy, then optionally register one commitment and query (if key set)."""
+    rpc_url = os.environ.get("RPC_URL", DEFAULT_RPC_URL)
+    pk = os.environ.get("DEPLOYER_PRIVATE_KEY")
+    if not pk:
+        print("Set RPC_URL and DEPLOYER_PRIVATE_KEY to run deploy and demo.")
+        return
+
+    w3 = get_w3(rpc_url)
+    print(f"Chain ID: {w3.eth.chain_id}")
