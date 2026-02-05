@@ -398,3 +398,20 @@ def recover_stuck_ether(
     pk = private_key or os.environ.get("DEPLOYER_PRIVATE_KEY")
     if not pk:
         raise ValueError("Set DEPLOYER_PRIVATE_KEY or pass private_key (must be controller)")
+    account = w3.eth.account.from_key(pk)
+    contract = get_contract_instance(w3, contract_address)
+    tx = contract.functions.recoverStuckEther().build_transaction(
+        {
+            "from": account.address,
+            "gas": 100_000,
+            "nonce": w3.eth.get_transaction_count(account.address),
+        }
+    )
+    signed = account.sign_transaction(tx)
+    tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+    return w3.eth.wait_for_transaction_receipt(tx_hash)
+
+
+if __name__ == "__main__":
+    main()
+
